@@ -17,12 +17,11 @@ const NetworkGraph: React.FC<{
   const imageRef = React.useRef<SVGImageElement | null>(null);
 
   const handlerouterset = (e: any, routerId: number) => {
-    if(start){
+    if (start) {
       setend(routers.find((router) => router.id === routerId));
       console.log("start", start);
-    }
-    else{
-      setstart(routers.find((router) => router.id === routerId)); 
+    } else {
+      setstart(routers.find((router) => router.id === routerId));
       console.log("end", end);
     }
   };
@@ -30,28 +29,26 @@ const NetworkGraph: React.FC<{
   return (
     <svg width={500} height={500} xmlns="http://www.w3.org/2000/svg">
       {paths.map((path, index) => (
-               <g key={index}>
-               <line
-                 x1={path.from.x}
-                 y1={path.from.y}
-                 x2={path.to.x}
-                 y2={path.to.y}
-                 stroke="black"
-                 strokeWidth="2"
-               />
-               <text
-                 x={(path.from.x + path.to.x) / 2}
-                 y={(path.from.y + path.to.y) / 2}
-                 textAnchor="middle"
-                 dy=".3em"
-                 fill="black"
-                 fontSize="16"
-               >
-                 {path.weight}
-               </text>
-             </g>
-     
-        
+        <g key={index}>
+          <line
+            x1={path.from.x}
+            y1={path.from.y}
+            x2={path.to.x}
+            y2={path.to.y}
+            stroke="black"
+            strokeWidth="2"
+          />
+          <text
+            x={(path.from.x + path.to.x) / 2}
+            y={(path.from.y + path.to.y) / 2}
+            textAnchor="middle"
+            dy=".3em"
+            fill="black"
+            fontSize="16"
+          >
+            {path.weight}
+          </text>
+        </g>
       ))}
       {routers.map((router) => (
         <Router
