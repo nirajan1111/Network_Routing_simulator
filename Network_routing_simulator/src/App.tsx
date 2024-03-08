@@ -70,7 +70,7 @@ const App = () => {
     }
     console.log("currentPaths",currentPaths )
     const duration = 1000;
-    const steps = 10;
+    const steps = 6;
     const image=document.querySelector('.image')
     image?.setAttribute('visibility','visible')
     console.log(image)
@@ -144,7 +144,6 @@ const App = () => {
         }
       }
     }
-
     setCurrentPaths([]);
     console.log("No path found between start and end routers");
   };
