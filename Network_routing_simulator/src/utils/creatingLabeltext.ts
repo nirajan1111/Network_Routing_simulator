@@ -24,9 +24,9 @@ function createLabeledText(label:any, position:any, scene:any) {
 
             const textMaterial = new THREE.MeshMatcapMaterial({ color: '#FFA896' });
             const text = new THREE.Mesh(textGeometry, textMaterial);
-
-            text.position.copy(position); // Set position using provided position
-            text.position.multiplyScalar(1.1); // Increase position by a factor of 1.1
+            text.rotation.x = -Math.PI / 2; 
+            text.position.copy(position);
+            text.position.multiplyScalar(1.1); 
 
             scene.add(text);
         }

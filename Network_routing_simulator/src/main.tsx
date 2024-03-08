@@ -8,14 +8,14 @@ const router = createBrowserRouter([
   {
     path: "/",
     // element: <App />,
-    element:<></>,
+    element:<>Hi</>,
     errorElement: <div>Not found</div>,
   },
   {
     path: "/3D",
     element: <ThreeD />,
     errorElement: <div>Not found</div>,
-  },
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

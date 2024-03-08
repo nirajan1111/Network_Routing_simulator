@@ -3,13 +3,29 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { greatCircleDistance, traceGreatCirclePath } from "./../../utils/math";
 import CubeData from "./cube";
+import PopupAlert from "../../core/components/popup";
 import createLabeledText from "./../../utils/creatingLabeltext";
 import { cube, Path } from "./../../types/types";
-import {useMyContext} from './../../Context/ContextProvider'
+import { useMyContext } from "./../../Context/ContextProvider";
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 const Earth: React.FC = () => {
-
-  const {graph, setGraph,pathCubesGroup,startCube,setStartCube,endCube, setEndCube, earthGroup, cubes, setCubes, pathcube,setPathcube}:any = useMyContext()
+  const [content, setcontent] = useState("");
+  const {
+    graph,
+    setGraph,
+    pathCubesGroup,
+    startCube,
+    setStartCube,
+    endCube,
+    setEndCube,
+    earthGroup,
+    cubes,
+    setCubes,
+    pathcube,
+    setPathcube,
+    isOpen,
+    togglePopup,
+  }: any = useMyContext();
   const setPath = () => {
     const input1 = prompt("Enter the start cube");
     const input2 = prompt("Enter the end cube");
@@ -17,7 +33,8 @@ const Earth: React.FC = () => {
     const cube1 = cubes.find((cube) => cube.label === input1);
     const cube2 = cubes.find((cube) => cube.label === input2);
     if (!cube1 || !cube2) {
-      console.log("Cube selected are not available");
+      setcontent("Cube selected are not available");
+      togglePopup();
     } else {
       const distance = greatCircleDistance(
         cube1.position.x,
@@ -41,6 +58,8 @@ const Earth: React.FC = () => {
     const cube2 = cubes.find((cube) => cube.label === input2);
     if (!cube1 || !cube2) {
       console.log("Cube selected are not available");
+      setcontent("Cube selected are not available");
+      togglePopup();
     } else {
       setStartCube(cube1);
       setEndCube(cube2);
@@ -89,6 +108,8 @@ const Earth: React.FC = () => {
   const moveBy = async () => {
     if (!startCube || !endCube) {
       console.log("Start and end cubes are not selected.");
+      setcontent("Start and end cubes are not selected.");
+      togglePopup();
       return;
     }
 
@@ -96,12 +117,14 @@ const Earth: React.FC = () => {
     console.log("obtained dikstra path", path);
     if (path.length === 0) {
       console.log("No path found between start and end cubes.");
+      setcontent("No path found between start and end cubes.");
+      togglePopup();
       return;
     }
     for (let i = 0; i < path.length; i++) {
       const start = path[i].from.position;
       const end = path[i].to.position;
-      const route = traceGreatCirclePath(start, end, 50, 20);
+      const route = traceGreatCirclePath(start, end, 50, 10);
       console.log(route);
       const cube = new THREE.Mesh(
         new THREE.BoxGeometry(1, 1, 1),
@@ -116,9 +139,6 @@ const Earth: React.FC = () => {
           const z = route[j].z;
           cube.position.set(x, y, z);
           console.log("Moving to", x, y, z);
-
-          // renderer.render(scene, camera);
-          // controls.update();
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       };
@@ -126,8 +146,7 @@ const Earth: React.FC = () => {
       await moveObject();
     }
   };
-  
- 
+
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
     75,
@@ -159,8 +178,6 @@ const Earth: React.FC = () => {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
-
-
 
   function dijkstra(
     graph: Path[],
@@ -227,7 +244,7 @@ const Earth: React.FC = () => {
     radius: number
   ) => {
     console.log("Entered");
-    const path = traceGreatCirclePath(start, end, radius, 20);
+    const path = traceGreatCirclePath(start, end, radius, 10);
     const newCubes: any = [];
 
     for (let i = 0; i < path.length; i++) {
@@ -403,20 +420,44 @@ const Earth: React.FC = () => {
   }, []);
 
   return (
-    <>
-      <div ref={canvasRef}></div>
-      <button className="absolute top-2 left-2 z-10" onClick={moveBy}>
-        Click to travel
-      </button>
-      <button className="absolute top-2 right-2 z-10" onClick={setPath}>
-        {" "}
-        Click to have a path
-      </button>
-      <button className="absolute bottom-2 left-2 z-10" onClick={setsrcanddesc}>
-        {" "}
-        Click to have a path
-      </button>
-    </>
+    <div className="container flex">
+      <div className="canvas-container">
+        <div ref={canvasRef}></div>
+      </div>
+      <div
+        className="absolute top-0 right-0 flex flex-col"
+        style={{ width: "20%" }}
+      >
+        <button className="bg-red-100 hover:bg-red-200 my-2" onClick={moveBy}>
+          travel
+        </button>
+        <button className="bg-red-100 hover:bg-red-200 my-2" onClick={setPath}>
+          set path
+        </button>
+        <button
+          className="bg-red-100 my-2 hover:bg-red-200"
+          onClick={setsrcanddesc}
+        >
+          set init and final
+        </button>
+        <div className="bg-red-100 text-center">
+          {cubes.map((cube: any) => (
+            <div key={cube.label}>{cube.label}</div>
+          ))}
+        </div>
+        <div className="bg-red-100 text-center">
+          {
+            graph.map((path: any) => (
+              <div key={path.from.label + path.to.label}>
+                {path.from.label} to {path.to.label} : {path.weight.toFixed(6)}
+              </div>
+            ))
+          }
+        </div>
+
+      </div>
+      {isOpen && <PopupAlert content={content} />}
+    </div>
   );
 };
 
