@@ -49,4 +49,4 @@ interface Point {
   }
   
 
-  export { greatCircleDistance, traceGreatCirclePath, Point };
+  export { greatCircleDistance, traceGreatCirclePath };

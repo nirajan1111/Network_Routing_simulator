@@ -7,7 +7,8 @@ import ThreeD from "./components/3D/threeD.tsx";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    // element: <App />,
+    element:<></>,
     errorElement: <div>Not found</div>,
   },
   {
