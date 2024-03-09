@@ -44,7 +44,6 @@ interface Point {
         const point = sphericalToCartesian(radius, theta, phi);
         points.push(point);
     }
-    // console.log(points)
     return points;
   }
   

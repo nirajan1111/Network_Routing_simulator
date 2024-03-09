@@ -2,14 +2,19 @@ import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { greatCircleDistance, traceGreatCirclePath } from "./../../utils/math";
-import CubeData from "./cube";
 import PopupAlert from "../../core/components/popup";
 import createLabeledText from "./../../utils/creatingLabeltext";
 import { cube, Path } from "./../../types/types";
+import * as dat from 'lil-gui'
 import { useMyContext } from "./../../Context/ContextProvider";
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+const gui = new dat.GUI()
+
 const Earth: React.FC = () => {
   const [content, setcontent] = useState("");
+  
   const {
     graph,
     setGraph,
@@ -47,7 +52,7 @@ const Earth: React.FC = () => {
       );
       newGraph.push({ from: cube1, to: cube2, weight: distance });
       newGraph.push({ from: cube2, to: cube1, weight: distance });
-      setGraph((prevGraph) => [...prevGraph, ...newGraph]);
+      setGraph((prevGraph: Path[]) => [...prevGraph, ...newGraph]);
     }
   };
   const setsrcanddesc = () => {
@@ -66,7 +71,7 @@ const Earth: React.FC = () => {
     }
   };
 
-  const onClick = (event: any) => {
+  const onClicked = (event: any) => {
     console.log("Double clicked");
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -83,7 +88,7 @@ const Earth: React.FC = () => {
       );
       cube.position.copy(intersectionPoint);
       const label: any = prompt("Enter the label for the cube");
-      createLabeledText(label, intersectionPoint, scene);
+      createLabeledText(label, intersectionPoint, scene,undefined);
 
       earthGroup.add(cube);
       const obj: cube = {
@@ -99,53 +104,88 @@ const Earth: React.FC = () => {
     }
   };
   useEffect(() => {
-    window.addEventListener("dblclick", onClick);
+    window.addEventListener("dblclick", onClicked);
 
     return () => {
-      window.removeEventListener("dblclick", onClick);
+      window.removeEventListener("dblclick", onClicked);
     };
   }, []);
   const moveBy = async () => {
     if (!startCube || !endCube) {
-      console.log("Start and end cubes are not selected.");
-      setcontent("Start and end cubes are not selected.");
-      togglePopup();
-      return;
+        console.log("Start and end cubes are not selected.");
+        setcontent("Start and end cubes are not selected.");
+        togglePopup();
+        return;
     }
 
     const path = dijkstra(graph, startCube, endCube);
     console.log("obtained dikstra path", path);
     if (path.length === 0) {
-      console.log("No path found between start and end cubes.");
-      setcontent("No path found between start and end cubes.");
-      togglePopup();
-      return;
+        console.log("No path found between start and end cubes.");
+        setcontent("No path found between start and end cubes.");
+        togglePopup();
+        return;
     }
+
+    const fontLoader = new FontLoader();
+    const font = await new Promise((resolve, reject) => {
+        fontLoader.load(
+            './font/helvetiker_regular.typeface.json',
+            resolve,
+            undefined, // onProgress callback
+            reject // onError callback
+        );
+    });
+
+    if (!font) {
+        console.error("Font could not be loaded.");
+        return;
+    }
+
+    const moveGroup = new THREE.Group();
+    earthGroup.add(moveGroup);
+
+    const textGeometry = new TextGeometry('1001', {
+      font: font,
+      size: 1.5,
+      height: 0.2,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 0.03,
+      bevelSize: 0.02,
+      bevelOffset: 0,
+      bevelSegments: 5
+  });
+  textGeometry.computeBoundingBox();
+  textGeometry.center();
+  const textMaterial = new THREE.MeshMatcapMaterial({ color: '#FFA896' });
+  const text = new THREE.Mesh(textGeometry, textMaterial);
+ 
+  text.rotation.x = 0.90477868423386;
+  text.rotation.y = -0.408407044966673;
+  
+  moveGroup.add(text);
     for (let i = 0; i < path.length; i++) {
-      const start = path[i].from.position;
-      const end = path[i].to.position;
-      const route = traceGreatCirclePath(start, end, 50, 10);
-      console.log(route);
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1, 1),
-        new THREE.MeshBasicMaterial({ color: Math.random() * 0x000000 })
-      );
+        const start = path[i].from.position;
+        const end = path[i].to.position;
+        const route = traceGreatCirclePath(start, end, 50, 10);
 
-      earthGroup.add(cube);
-      const moveObject = async () => {
-        for (let j = 0; j < route.length; j++) {
-          const x = route[j].x;
-          const y = route[j].y;
-          const z = route[j].z;
-          cube.position.set(x, y, z);
-          console.log("Moving to", x, y, z);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      };
+        
 
-      await moveObject();
+        const moveObject = async () => {
+            for (let j = 0; j < route.length; j++) {
+                const x = route[j].x*1.01;
+                const y = route[j].y*1.01;
+                const z = route[j].z*1.01;
+                text.position.set(x, y, z);
+                console.log("Moving to", x, y, z);
+                await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+        };
+
+        await moveObject();
     }
-  };
+};
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
@@ -164,6 +204,7 @@ const Earth: React.FC = () => {
     new THREE.SphereGeometry(50, 320, 320),
     new THREE.MeshBasicMaterial({ map: globeTexture })
   );
+
   const sizes = {
     width: window.innerWidth,
     height: window.innerHeight,
@@ -238,24 +279,7 @@ const Earth: React.FC = () => {
 
     return [];
   }
-  const generateGreatCirclePath = (
-    start: { x: number; y: number; z: number },
-    end: { x: number; y: number; z: number },
-    radius: number
-  ) => {
-    console.log("Entered");
-    const path = traceGreatCirclePath(start, end, radius, 10);
-    const newCubes: any = [];
-
-    for (let i = 0; i < path.length; i++) {
-      const x = path[i].x;
-      const y = path[i].y;
-      const z = path[i].z;
-    }
-    setPathcube(newCubes);
-  };
   const calculateDistances = () => {
-    console.log("Entered calculateDistances");
     const newGraph: Path[] = [];
     {
       const cube1 = cubes[0];
@@ -317,10 +341,18 @@ const Earth: React.FC = () => {
       newGraph.push({ from: cube1, to: cube2, weight: distance });
       newGraph.push({ from: cube2, to: cube1, weight: distance });
     }
-    setGraph(newGraph);
+    setGraph((prevGraph: Path[]) => [...prevGraph, ...newGraph]);
   };
 
   useEffect(() => {
+    const ambientlight = new THREE.AmbientLight(0xffffff, 0.2);
+    ambientlight.position.set(60, 0, 0);
+    scene.add(ambientlight);
+
+    const pointerlight = new THREE.PointLight(0xffffff, 0.9);
+    pointerlight.position.set(60, 0, 0);
+    scene.add(pointerlight);
+
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     if (canvasRef.current) {
@@ -334,7 +366,6 @@ const Earth: React.FC = () => {
     scene.add(axesHelper);
     earthGroup.add(earth);
     scene.add(earthGroup);
-
     scene.add(cubesGroup);
 
     const generateRandomCubes = () => {
@@ -370,16 +401,14 @@ const Earth: React.FC = () => {
           cubes[i].position.z
         );
         cubesGroup.add(cubes[i].cube);
-        createLabeledText(cubes[i].label, cubes[i].position, scene);
+        createLabeledText(cubes[i].label, cubes[i].position, scene, undefined);
       }
     }
-    camera.position.z = 100;
+    camera.position.z = 75;
 
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
-
-    const clock = new THREE.Clock();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -395,37 +424,51 @@ const Earth: React.FC = () => {
     };
   }, []);
   useEffect(() => {
-    console.log(graph);
-    console.log(cubes);
-    if (cubes.length < 2) return;
-    for (let i = 0; i < cubes.length; i++) {
-      for (let j = 0; j < cubes.length; j++) {
-        if (i != j) {
-          const start = cubes[i].position;
-          const end = cubes[j].position;
-          generateGreatCirclePath(start, end, 50);
-        }
-      }
+    console.log("Graph changed", graph);
+    if (cubes.length < 2 || graph.length === 0) {
+      pathCubesGroup.clear();
+      return;
     }
-  }, [cubes, graph]);
-  useEffect(() => {}, []);
+  
+    pathCubesGroup.clear();
+      for (const edge of graph) {
+        const path = traceGreatCirclePath(
+          edge.from.position,
+          edge.to.position,
+          50,
+          10
+        );
+        const curvePoints = path.map(point => new THREE.Vector3(point.x, point.y, point.z));
+        const curve = new THREE.CatmullRomCurve3(curvePoints);
+    
+        const points = curve.getPoints(50);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    
+        const material = new THREE.LineBasicMaterial({ color: 0x00ff00,linewidth: 2  });
+    
+        const curveLine = new THREE.Line(geometry, material);
+        pathCubesGroup.add(curveLine);
+       
+      }  
+  }, [graph]);
   useEffect(() => {
     calculateDistances();
   }, [cubes]);
   useEffect(() => {
     scene.add(pathCubesGroup);
     return () => {
-      scene.remove(pathCubesGroup);
+    scene.remove(pathCubesGroup);
     };
   }, []);
 
   return (
-    <div className="container flex">
+    <div className="container flex bg-black">
+      <img src="/images/loading.gif" alt="Loading..." className="absolute -z-10"/>
       <div className="canvas-container">
         <div ref={canvasRef}></div>
       </div>
       <div
-        className="absolute top-0 right-0 flex flex-col"
+        className="absolute top-16 right-0 flex flex-col"
         style={{ width: "20%" }}
       >
         <button className="bg-red-100 hover:bg-red-200 my-2" onClick={moveBy}>
@@ -440,25 +483,21 @@ const Earth: React.FC = () => {
         >
           set init and final
         </button>
-        <div className="bg-red-100 text-center">
+        <div className="bg-red-100 text-center flex flex-row flex-wrap">
           {cubes.map((cube: any) => (
-            <div key={cube.label}>{cube.label}</div>
+            <div className="m-2" key={cube.label}>{cube.label}</div>
           ))}
         </div>
         <div className="bg-red-100 text-center">
-          {
-            graph.map((path: any) => (
-              <div key={path.from.label + path.to.label}>
-                {path.from.label} to {path.to.label} : {path.weight.toFixed(6)}
-              </div>
-            ))
-          }
+          {graph.map((path: any) => (
+            <div key={path.from.label + path.to.label}>
+              {path.from.label} to {path.to.label} : {path.weight.toFixed(6)}
+            </div>
+          ))}
         </div>
-
       </div>
       {isOpen && <PopupAlert content={content} />}
     </div>
   );
 };
-
 export default Earth;
