@@ -22,11 +22,8 @@ interface Point {
   function greatCircleDistance(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, radius: number): number {
     const [a, theta1, phi1] = cartesianToSpherical(x1, y1, z1);
     const [b, theta2, phi2] = cartesianToSpherical(x2, y2, z2);
-  
     const deltaPhi = Math.abs(phi1 - phi2);
-  
     const centralAngle = 2 * Math.asin(Math.sqrt(Math.sin((theta1 - theta2) / 2)**2 + Math.cos(theta1) * Math.cos(theta2) * Math.sin(deltaPhi / 2)**2));
-  
     const distance = radius * centralAngle;
     return distance;
   }
@@ -44,7 +41,6 @@ interface Point {
         const point = sphericalToCartesian(radius, theta, phi);
         points.push(point);
     }
-    // console.log(points)
     return points;
   }
   

@@ -1,9 +1,9 @@
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import * as THREE from 'three';
-function createLabeledText(label:any, position:any, scene:any) {
-    const fontLoader = new FontLoader()
 
+function createLabeledText(label:any, position:any, scene:any, group:any) {
+    const fontLoader = new FontLoader()
     fontLoader.load(
         './font/helvetiker_regular.typeface.json',
         (font) => {
@@ -27,8 +27,11 @@ function createLabeledText(label:any, position:any, scene:any) {
             text.rotation.x = -Math.PI / 2; 
             text.position.copy(position);
             text.position.multiplyScalar(1.1); 
-
-            scene.add(text);
+            if(group){
+                group.add(text);
+            }else{
+                scene.add(text);
+            }
         }
     );
 }
