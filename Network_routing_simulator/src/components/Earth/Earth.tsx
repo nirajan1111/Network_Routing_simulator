@@ -11,10 +11,12 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 const gui = new dat.GUI()
+import { Vector3, BufferGeometry, BufferAttribute, PointsMaterial, Points, Color } from 'three';
 
 const Earth: React.FC = () => {
+  const [moving ,setMoving]=useState(false)
   const [content, setcontent] = useState("");
-  
+  const [startend,setStartend]=useState("")
   const {
     graph,
     setGraph,
@@ -31,12 +33,15 @@ const Earth: React.FC = () => {
     isOpen,
     togglePopup,
   }: any = useMyContext();
+
+
+  //Functions
   const setPath = () => {
     const input1 = prompt("Enter the start cube");
     const input2 = prompt("Enter the end cube");
     const newGraph: Path[] = [];
-    const cube1 = cubes.find((cube) => cube.label === input1);
-    const cube2 = cubes.find((cube) => cube.label === input2);
+    const cube1 = cubes.find((cube:any) => cube.label === input1);
+    const cube2 = cubes.find((cube:any) => cube.label === input2);
     if (!cube1 || !cube2) {
       setcontent("Cube selected are not available");
       togglePopup();
@@ -58,9 +63,8 @@ const Earth: React.FC = () => {
   const setsrcanddesc = () => {
     const input1 = prompt("Enter the start cube");
     const input2 = prompt("Enter the end cube");
-    const newGraph: Path[] = [];
-    const cube1 = cubes.find((cube) => cube.label === input1);
-    const cube2 = cubes.find((cube) => cube.label === input2);
+    const cube1 = cubes.find((cube:any) => cube.label === input1);
+    const cube2 = cubes.find((cube:any) => cube.label === input2);
     if (!cube1 || !cube2) {
       console.log("Cube selected are not available");
       setcontent("Cube selected are not available");
@@ -71,14 +75,51 @@ const Earth: React.FC = () => {
     }
   };
 
+  const createStars = () => {
+    const vertices: number[] = [];
+    const colors: Color[] = [];
+  
+    for (let i = 0; i < 500; i++) {
+      const vertex = new Vector3();
+      vertex.x = 800 * Math.random() - 300;
+      vertex.y = 800 * Math.random() - 300;
+      vertex.z = 800 * Math.random() - 300;
+      vertices.push(vertex.x, vertex.y, vertex.z);
+      colors.push(new Color(1, 1, 1));
+    }
+  
+    const around = new BufferGeometry();
+    around.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
+    around.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3));
+  
+    const aroundMaterial = new PointsMaterial({
+      size: 2,
+      sizeAttenuation: true,
+      color: 0x4d76cf,
+      transparent: true,
+      opacity: 1,
+      // Assuming this.options.textures.gradient is available
+      // map: textureLoader.load(this.options.textures.gradient),
+    });
+  
+    const aroundPoints = new Points(around, aroundMaterial);
+    aroundPoints.name = 'Stars';
+    earthGroup.add(aroundPoints);
+  };
+  
+  useEffect(() => {
+
+    createStars();
+  
+  }, []);
+
   const onClicked = (event: any) => {
     console.log("Double clicked");
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
     raycaster.setFromCamera(mouse, camera);
-
     const intersects = raycaster.intersectObject(earth);
+
 
     if (intersects.length > 0) {
       const intersectionPoint = intersects[0].point;
@@ -100,7 +141,7 @@ const Earth: React.FC = () => {
         cube,
         label: label.toString(),
       };
-      setCubes((prevCubes) => [...prevCubes, obj]);
+      setCubes((prevCubes:any) => [...prevCubes, obj]);
     }
   };
   useEffect(() => {
@@ -110,6 +151,11 @@ const Earth: React.FC = () => {
       window.removeEventListener("dblclick", onClicked);
     };
   }, []);
+
+ 
+
+
+
   const moveBy = async () => {
     if (!startCube || !endCube) {
         console.log("Start and end cubes are not selected.");
@@ -126,29 +172,27 @@ const Earth: React.FC = () => {
         togglePopup();
         return;
     }
-
+    setMoving(true)
+    console.log("Moving to the path");
     const fontLoader = new FontLoader();
     const font = await new Promise((resolve, reject) => {
         fontLoader.load(
             './font/helvetiker_regular.typeface.json',
             resolve,
-            undefined, // onProgress callback
-            reject // onError callback
+            undefined, 
+            reject 
         );
     });
-
     if (!font) {
         console.error("Font could not be loaded.");
         return;
     }
-
     const moveGroup = new THREE.Group();
     earthGroup.add(moveGroup);
-
     const textGeometry = new TextGeometry('1001', {
       font: font,
       size: 1.5,
-      height: 0.2,
+      height: 0.5,
       curveSegments: 12,
       bevelEnabled: true,
       bevelThickness: 0.03,
@@ -160,32 +204,30 @@ const Earth: React.FC = () => {
   textGeometry.center();
   const textMaterial = new THREE.MeshMatcapMaterial({ color: '#FFA896' });
   const text = new THREE.Mesh(textGeometry, textMaterial);
- 
   text.rotation.x = 0.90477868423386;
   text.rotation.y = -0.408407044966673;
-  
   moveGroup.add(text);
     for (let i = 0; i < path.length; i++) {
         const start = path[i].from.position;
         const end = path[i].to.position;
         const route = traceGreatCirclePath(start, end, 50, 10);
-
-        
-
+        setStartend(path[i].from.label+path[i].to.label)
         const moveObject = async () => {
             for (let j = 0; j < route.length; j++) {
                 const x = route[j].x*1.01;
                 const y = route[j].y*1.01;
                 const z = route[j].z*1.01;
                 text.position.set(x, y, z);
-                console.log("Moving to", x, y, z);
                 await new Promise((resolve) => setTimeout(resolve, 500));
             }
         };
-
         await moveObject();
+        setStartend("")
     }
+    setMoving(false)
 };
+
+
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
@@ -204,6 +246,20 @@ const Earth: React.FC = () => {
     new THREE.SphereGeometry(50, 320, 320),
     new THREE.MeshBasicMaterial({ map: globeTexture })
   );
+  const pointMaterial = new THREE.PointsMaterial({
+    color: 0x81ffff, 
+    transparent: true,
+    sizeAttenuation: true,
+    opacity: 0.1,
+    vertexColors: false, 
+    size: 0.01,
+  })
+  // const earth_border = new THREE.SphereBufferGeometry(
+  //   options.earth.radius + 10,
+  //   60,
+  //   60
+  // );
+  // const points = new THREE.Points(earth_border, pointMaterial);
 
   const sizes = {
     width: window.innerWidth,
@@ -239,6 +295,7 @@ const Earth: React.FC = () => {
     queue.push(start);
 
     while (queue.length) {
+      // console.log(JSON.stringify(queue[0].position))
       queue.sort(
         (a, b) =>
           distances[JSON.stringify(a.position)] -
@@ -276,73 +333,9 @@ const Earth: React.FC = () => {
         }
       }
     }
-
     return [];
   }
-  const calculateDistances = () => {
-    const newGraph: Path[] = [];
-    {
-      const cube1 = cubes[0];
-      const cube2 = cubes[1];
-      const distance = greatCircleDistance(
-        cube1.position.x,
-        cube1.position.y,
-        cube1.position.z,
-        cube2.position.x,
-        cube2.position.y,
-        cube2.position.z,
-        50
-      );
-      newGraph.push({ from: cube1, to: cube2, weight: distance });
-      newGraph.push({ from: cube2, to: cube1, weight: distance });
-    }
-    {
-      const cube1 = cubes[0];
-      const cube2 = cubes[2];
-      const distance = greatCircleDistance(
-        cube1.position.x,
-        cube1.position.y,
-        cube1.position.z,
-        cube2.position.x,
-        cube2.position.y,
-        cube2.position.z,
-        50
-      );
-      newGraph.push({ from: cube1, to: cube2, weight: distance });
-      newGraph.push({ from: cube2, to: cube1, weight: distance });
-    }
-    {
-      const cube1 = cubes[1];
-      const cube2 = cubes[3];
-      const distance = greatCircleDistance(
-        cube1.position.x,
-        cube1.position.y,
-        cube1.position.z,
-        cube2.position.x,
-        cube2.position.y,
-        cube2.position.z,
-        50
-      );
-      newGraph.push({ from: cube1, to: cube2, weight: distance });
-      newGraph.push({ from: cube2, to: cube1, weight: distance });
-    }
-    {
-      const cube1 = cubes[2];
-      const cube2 = cubes[3];
-      const distance = greatCircleDistance(
-        cube1.position.x,
-        cube1.position.y,
-        cube1.position.z,
-        cube2.position.x,
-        cube2.position.y,
-        cube2.position.z,
-        50
-      );
-      newGraph.push({ from: cube1, to: cube2, weight: distance });
-      newGraph.push({ from: cube2, to: cube1, weight: distance });
-    }
-    setGraph((prevGraph: Path[]) => [...prevGraph, ...newGraph]);
-  };
+
 
   useEffect(() => {
     const ambientlight = new THREE.AmbientLight(0xffffff, 0.2);
@@ -374,9 +367,9 @@ const Earth: React.FC = () => {
         cube: THREE.Mesh;
       }[] = [];
       for (let i = 0; i < 10; i++) {
-        const theta = Math.random() * Math.PI * 2; // Random angle
-        const phi = Math.acos(Math.random() * 2 - 1); // Random inclination angle
-        const radius = 50; // Earth's radius
+        const theta = Math.random() * Math.PI * 2; 
+        const phi = Math.acos(Math.random() * 2 - 1);
+        const radius = 50; 
         const x = radius * Math.sin(phi) * Math.cos(theta);
         const y = radius * Math.sin(phi) * Math.sin(theta);
         const z = radius * Math.cos(phi);
@@ -405,10 +398,11 @@ const Earth: React.FC = () => {
       }
     }
     camera.position.z = 75;
-
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
+    controls.minDistance = 55; 
+  controls.maxDistance = 200;
 
     function animate() {
       requestAnimationFrame(animate);
@@ -425,11 +419,7 @@ const Earth: React.FC = () => {
   }, []);
   useEffect(() => {
     console.log("Graph changed", graph);
-    if (cubes.length < 2 || graph.length === 0) {
-      pathCubesGroup.clear();
-      return;
-    }
-  
+   
     pathCubesGroup.clear();
       for (const edge of graph) {
         const path = traceGreatCirclePath(
@@ -444,22 +434,48 @@ const Earth: React.FC = () => {
         const points = curve.getPoints(50);
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
     
-        const material = new THREE.LineBasicMaterial({ color: 0x00ff00,linewidth: 2  });
+        const material = new THREE.LineBasicMaterial({ color: 0x00ff00,linewidth: 4  });
     
         const curveLine = new THREE.Line(geometry, material);
         pathCubesGroup.add(curveLine);
        
       }  
   }, [graph]);
-  useEffect(() => {
-    calculateDistances();
-  }, [cubes]);
+  
   useEffect(() => {
     scene.add(pathCubesGroup);
     return () => {
     scene.remove(pathCubesGroup);
     };
   }, []);
+  useEffect(() => {
+    console.log(startend, moving);
+    if (startend && moving) {
+      console.log("Its moving");
+      const updatedGraph = [...graph]; 
+      for (let i = 0; i < updatedGraph.length; i++) {
+        if (updatedGraph[i].from.label + updatedGraph[i].to.label === startend) {
+          updatedGraph[i].weight += 10; 
+        }
+      }
+      setGraph(updatedGraph);
+    } else {
+      const updatedGraph = graph.map(edge => ({
+        ...edge,
+        weight: greatCircleDistance(
+          edge.from.position.x,
+          edge.from.position.y,
+          edge.from.position.z,
+          edge.to.position.x,
+          edge.to.position.y,
+          edge.to.position.z,
+          50
+        )
+      }));
+      setGraph(updatedGraph); 
+    }
+  }, [moving, startend]);
+  
 
   return (
     <div className="container flex bg-black">
