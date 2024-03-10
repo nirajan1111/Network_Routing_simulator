@@ -114,6 +114,8 @@ const Earth: React.FC = () => {
   }, []);
 
   const onClicked = (event: any) => {
+    const cubetexture =textureLoader.load('./texture/Door001.png')
+
     console.log("Double clicked");
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -125,7 +127,7 @@ const Earth: React.FC = () => {
       const intersectionPoint = intersects[0].point;
       const cube = new THREE.Mesh(
         new THREE.BoxGeometry(1, 1, 1),
-        new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff })
+        new THREE.MeshBasicMaterial({ map: cubetexture})
       );
       cube.position.copy(intersectionPoint);
       const label: any = prompt("Enter the label for the cube");
@@ -189,7 +191,12 @@ const Earth: React.FC = () => {
     }
     const moveGroup = new THREE.Group();
     earthGroup.add(moveGroup);
-    const textGeometry = new TextGeometry('1001', {
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+        result += Math.random() < 0.5 ? '0' : '1';
+    }
+    console.log("Random string", result);
+    const textGeometry = new TextGeometry(result, {
       font: font,
       size: 1.5,
       height: 0.5,
@@ -246,20 +253,6 @@ const Earth: React.FC = () => {
     new THREE.SphereGeometry(50, 320, 320),
     new THREE.MeshBasicMaterial({ map: globeTexture })
   );
-  const pointMaterial = new THREE.PointsMaterial({
-    color: 0x81ffff, 
-    transparent: true,
-    sizeAttenuation: true,
-    opacity: 0.1,
-    vertexColors: false, 
-    size: 0.01,
-  })
-  // const earth_border = new THREE.SphereBufferGeometry(
-  //   options.earth.radius + 10,
-  //   60,
-  //   60
-  // );
-  // const points = new THREE.Points(earth_border, pointMaterial);
 
   const sizes = {
     width: window.innerWidth,
@@ -361,42 +354,42 @@ const Earth: React.FC = () => {
     scene.add(earthGroup);
     scene.add(cubesGroup);
 
-    const generateRandomCubes = () => {
-      const newCubes: {
-        position: { x: number; y: number; z: number };
-        cube: THREE.Mesh;
-      }[] = [];
-      for (let i = 0; i < 10; i++) {
-        const theta = Math.random() * Math.PI * 2; 
-        const phi = Math.acos(Math.random() * 2 - 1);
-        const radius = 50; 
-        const x = radius * Math.sin(phi) * Math.cos(theta);
-        const y = radius * Math.sin(phi) * Math.sin(theta);
-        const z = radius * Math.cos(phi);
-        const cube = new THREE.Mesh(
-          new THREE.BoxGeometry(1, 1, 1),
-          new THREE.MeshBasicMaterial({
-            map: textureLoader.load("./images/Metal032_1K-JPG_Color.jpg"),
-          })
-        );
-        cube.position.set(x, y, z);
-        cubesGroup.add(cube);
-        newCubes.push({ position: { x, y, z }, cube });
-      }
-    };
-    if (cubes.length === 0) {
-      generateRandomCubes();
-    } else {
-      for (let i = 0; i < cubes.length; i++) {
-        cubes[i].cube.position.set(
-          cubes[i].position.x,
-          cubes[i].position.y,
-          cubes[i].position.z
-        );
-        cubesGroup.add(cubes[i].cube);
-        createLabeledText(cubes[i].label, cubes[i].position, scene, undefined);
-      }
-    }
+    // const generateRandomCubes = () => {
+    //   const newCubes: {
+    //     position: { x: number; y: number; z: number };
+    //     cube: THREE.Mesh;
+    //   }[] = [];
+    //   for (let i = 0; i < 10; i++) {
+    //     const theta = Math.random() * Math.PI * 2; 
+    //     const phi = Math.acos(Math.random() * 2 - 1);
+    //     const radius = 50; 
+    //     const x = radius * Math.sin(phi) * Math.cos(theta);
+    //     const y = radius * Math.sin(phi) * Math.sin(theta);
+    //     const z = radius * Math.cos(phi);
+    //     const cube = new THREE.Mesh(
+    //       new THREE.BoxGeometry(1, 1, 1),
+    //       new THREE.MeshBasicMaterial({
+    //         map: textureLoader.load("./images/Metal032_1K-JPG_Color.jpg"),
+    //       })
+    //     );
+    //     cube.position.set(x, y, z);
+    //     cubesGroup.add(cube);
+    //     newCubes.push({ position: { x, y, z }, cube });
+    //   }
+    // };
+    // if (cubes.length === 0) {
+    //   generateRandomCubes();
+    // } else {
+    //   for (let i = 0; i < cubes.length; i++) {
+    //     cubes[i].cube.position.set(
+    //       cubes[i].position.x,
+    //       cubes[i].position.y,
+    //       cubes[i].position.z
+    //     );
+    //     cubesGroup.add(cubes[i].cube);
+    //     createLabeledText(cubes[i].label, cubes[i].position, scene, undefined);
+    //   }
+    // }
     camera.position.z = 75;
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
