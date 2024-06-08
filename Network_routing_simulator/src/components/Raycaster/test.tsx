@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import  { useEffect, useRef } from 'react'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import * as THREE from 'three'
 const Test = () => {

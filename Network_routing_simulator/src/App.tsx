@@ -1,7 +1,7 @@
 import "./App.css";
-
 import { useEffect, useState } from "react";
 import NetworkGraph from "./components/NetworkGraph";
+
 interface Router {
   id: number;
   x: number;
@@ -13,8 +13,9 @@ interface Path {
   to: Router;
   weight: number;
 }
+
 const App = () => {
-  const [routers, setRouters] = useState<Router[]>([
+  const [routers] = useState<Router[]>([
     { id: 0, x: 50, y: 50 },
     { id: 1, x: 150, y: 100 },
     { id: 2, x: 250, y: 50 },
@@ -50,49 +51,41 @@ const App = () => {
     })),
   ];
 
-  const [paths, setPaths] = useState<Path[]>(undirectedPaths);
+  const [paths] = useState<Path[]>(undirectedPaths);
   const [currentPaths, setCurrentPaths] = useState<Path[]>([]);
 
   const [start, setStart] = useState<Router | null>(null);
   const [end, setEnd] = useState<Router | null>(null);
-  const [PathforMovingObject, setPathforMovingObject] = useState<Path[][]>([[]])
-  const [movingObject, setMovingObject] = useState<Router | null>(null);
 
+  const moveObjectAlongPath = async () => {
 
-  const moveObjectAlongPath = async (
-    startRouter: Router,
-    endRouter: Router
-  ) => {
-
-    if(currentPaths.length===0){
+    if (currentPaths.length === 0) {
       console.log("No path found between start and end routers");
       return;
     }
-    console.log("currentPaths",currentPaths )
-    const duration = 1000;
+    console.log("currentPaths", currentPaths);
+
     const steps = 6;
-    const image=document.querySelector('.image')
-    image?.setAttribute('visibility','visible')
-    console.log(image)
-    for(let i=0;i<currentPaths.length;i++){
-    
-    const stepX = (currentPaths[i].to.x - currentPaths[i].from.x) / steps;
-    const stepY = (currentPaths[i].to.y -currentPaths[i].from.y) / steps;
+    const image = document.querySelector('.image');
+    image?.setAttribute('visibility', 'visible');
+    console.log(image);
 
-   
-    for (let stepCount = 0; stepCount < steps; stepCount++) {
-      const newX = currentPaths[i].from.x+ stepX * stepCount;
-      const newY = currentPaths[i].from.y + stepY * stepCount;
+    for (let i = 0; i < currentPaths.length; i++) {
+      const stepX = (currentPaths[i].to.x - currentPaths[i].from.x) / steps;
+      const stepY = (currentPaths[i].to.y - currentPaths[i].from.y) / steps;
 
-     image?.setAttribute('x',`${newX}`)
-     image?.setAttribute('y',`${newY}`)
+      for (let stepCount = 0; stepCount < steps; stepCount++) {
+        const newX = currentPaths[i].from.x + stepX * stepCount;
+        const newY = currentPaths[i].from.y + stepY * stepCount;
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        image?.setAttribute('x', `${newX}`);
+        image?.setAttribute('y', `${newY}`);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
-  }
 
-    image?.setAttribute('visibility','hidden')
-    setMovingObject(null);
+    image?.setAttribute('visibility', 'hidden');
   };
 
   const shortestPath = (startRouter: Router, endRouter: Router) => {
@@ -148,32 +141,32 @@ const App = () => {
     console.log("No path found between start and end routers");
   };
 
-
   useEffect(() => {
-    if(start && end){
-      shortestPath(start!, end!);
+    if (start && end) {
+      shortestPath(start, end);
     }
-  
-  }, [routers,start,end]);
+  }, [start, end, routers]);
 
   const Simulate = () => {
     if (!start || !end) {
       console.log("Please select both start and end routers.");
       return;
     }
-   
-
-      setMovingObject(start);
-      moveObjectAlongPath(start, end);
-   
+    moveObjectAlongPath();
   };
-  
+
   return (
     <div>
       <h1>Router Simulator</h1>
-      <NetworkGraph routers={routers} paths={paths} start={start!} setstart={setStart} end={end!} setend={setEnd} />
+      <NetworkGraph
+        routers={routers}
+        paths={paths}
+        start={start!}
+        setstart={setStart}
+        end={end!}
+        setend={setEnd}
+      />
       <button onClick={Simulate}>Simulate</button>
-      
     </div>
   );
 };

@@ -19,6 +19,8 @@ interface ContextValue {
     position: { x: number; y: number; z: number };
     cube: THREE.Mesh;
   }[];
+  isOpen: boolean;
+  togglePopup: () => void;
   setPathcube: React.Dispatch<
     React.SetStateAction<
       { position: { x: number; y: number; z: number }; cube: THREE.Mesh }[]
@@ -29,10 +31,10 @@ interface ContextValue {
 // Create the context
 const MyContext = createContext<ContextValue | undefined>(undefined);
 
-export const MyProvider: React.FC = ({ children }: any) => {
+export const MyProvider: any = ({ children }: any) => {
   const [graph, setGraph] = useState<Path[]>([]);
   const [pathCubesGroup] = useState(new THREE.Group());
-  const [startCube, setStartCube] = useState<cube | null>();
+  const [startCube, setStartCube] = useState<cube | null>(null);
   const [endCube, setEndCube] = useState<cube | null>(null);
   const [earthGroup] = useState(new THREE.Group());
   const [cubes, setCubes] = useState<cube[]>(CubeData);

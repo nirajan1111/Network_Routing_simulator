@@ -16,7 +16,7 @@ const NetworkGraph: React.FC<{
 }> = ({ routers, paths, start, setstart, end, setend }) => {
   const imageRef = React.useRef<SVGImageElement | null>(null);
 
-  const handlerouterset = (e: any, routerId: number) => {
+  const handlerouterset = ( routerId: number) => {
     if (start) {
       setend(routers.find((router) => router.id === routerId));
       console.log("start", start);
@@ -54,7 +54,7 @@ const NetworkGraph: React.FC<{
         <Router
           key={router.id}
           {...router}
-          onClick={(e: any) => handlerouterset(e, router.id)}
+          onClick={() => handlerouterset( router.id)}
         />
       ))}
       <image

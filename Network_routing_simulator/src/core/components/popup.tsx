@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { useMyContext } from "../../Context/ContextProvider";
 const PopupAlert = ({content}:any) => {
 

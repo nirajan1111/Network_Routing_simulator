@@ -1,16 +1,14 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { greatCircleDistance, traceGreatCirclePath } from "./../../utils/math";
 import PopupAlert from "../../core/components/popup";
 import createLabeledText from "./../../utils/creatingLabeltext";
 import { cube, Path } from "./../../types/types";
-import * as dat from 'lil-gui'
 import { useMyContext } from "./../../Context/ContextProvider";
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-const gui = new dat.GUI()
 import { Vector3, BufferGeometry, BufferAttribute, PointsMaterial, Points, Color } from 'three';
 
 const Earth: React.FC = () => {
@@ -28,8 +26,7 @@ const Earth: React.FC = () => {
     earthGroup,
     cubes,
     setCubes,
-    pathcube,
-    setPathcube,
+   
     isOpen,
     togglePopup,
   }: any = useMyContext();
@@ -90,7 +87,7 @@ const Earth: React.FC = () => {
   
     const around = new BufferGeometry();
     around.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3));
-    around.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3));
+    around.setAttribute('color', new BufferAttribute(new Float32Array(), 3));
   
     const aroundMaterial = new PointsMaterial({
       size: 2,
@@ -177,7 +174,7 @@ const Earth: React.FC = () => {
     setMoving(true)
     console.log("Moving to the path");
     const fontLoader = new FontLoader();
-    const font = await new Promise((resolve, reject) => {
+    const font:Font = await new Promise((resolve, reject) => {
         fontLoader.load(
             './font/helvetiker_regular.typeface.json',
             resolve,
@@ -453,15 +450,15 @@ const Earth: React.FC = () => {
       }
       setGraph(updatedGraph);
     } else {
-      const updatedGraph = graph.map(edge => ({
+      const updatedGraph: Path[] = graph.map((edge: Path) => ({
         ...edge,
         weight: greatCircleDistance(
-          edge.from.position.x,
-          edge.from.position.y,
-          edge.from.position.z,
-          edge.to.position.x,
-          edge.to.position.y,
-          edge.to.position.z,
+          edge?.from.position.x,
+          edge?.from.position.y,
+          edge?.from.position.z,
+          edge?.to.position.x,
+          edge?.to.position.y,
+          edge?.to.position.z,
           50
         )
       }));
